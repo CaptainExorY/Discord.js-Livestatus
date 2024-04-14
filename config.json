@@ -1,1 +1,6 @@
-zest
+{
+    "token": "your-bot-token",
+    "clientId": "your-bot-client-id",
+    "mongoURI": "mongoose-connect-uri",
+    "guildId": "your-guild-id",
+}
