@@ -568,7 +568,7 @@ const updateStatusMessage = async (client, guildId) => {
         
         console.log(status);
         
-        const isOutage = status.websiteStatus.status === 'Offline <a:red_dota:1228131551334895686>' || status.docsStatus.status === 'Offline' || status.apiStatus.status === 'Offline <a:red_dota:1228131551334895686>';
+        const isOutage = status.websiteStatus.status === 'Offline ' || status.docsStatus.status === 'Offline' || status.apiStatus.status === 'Offline ';
 
         // Update the database with the current timestamp if there's an outage
         if (isOutage) {
