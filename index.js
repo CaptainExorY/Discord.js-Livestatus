@@ -2,39 +2,17 @@ const fs = require('fs');
 const path = require('node:path');
 const fetch = require('node-fetch');
 const mongoose = require('mongoose');
-const logger = require('./handlers/fileLogHandler');
-const {
-    Client,
-    Collection,
-    Events,
-    GatewayIntentBits,
-    Partials
-} = require('discord.js');
-const {
-    token,
-    mongoURI,
-} = require('./config.json');
-const {
-    ActivityType,
-    EmbedBuilder
-} = require("discord.js");
-
-// Define the Guild model only once
+const { Client, Collection, Events, GatewayIntentBits, Partials } = require('discord.js');
+const { token, mongoURI } = require('./config.json');
+const { ActivityType, EmbedBuilder } = require("discord.js");
 const Guild = require('./models/guildModel');
-ient = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, 
-GatewayIntentBits.DirectMessages,
-GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildModeration, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates],
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildModeration, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates],
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
-    ws: { properties: { $browser: 'Discord iOS' } },
 });
+const { updateStatusMessage } = require('./handlers/statusHandler');
 
-/////MAX LISTENERS
-client.setMaxListeners(20);
-/////MAX LISTENERS
 client.commands = new Collection();
-
-
 
 let status = [{
         name: '.gg/kqjexCVD',
@@ -55,7 +33,7 @@ async function loadGuildIds() {
                 }));
         return guildData || [];
     } catch (err) {
-        logger.error('Error fetching guild IDs from MongoDB:', err);
+        console.error('Error fetching guild IDs from MongoDB:', err);
         throw err;
     }
 }
@@ -63,9 +41,9 @@ async function loadGuildIds() {
 async function connectToMongo() {
     try {
         await mongoose.connect(mongoURI);
-        logger.info('Connected to MongoDB');
+        console.log('Connected to MongoDB');
     } catch (err) {
-        logger.error('Error connecting to MongoDB', err);
+        console.error('Error connecting to MongoDB', err);
         throw err;
     }
 }
@@ -82,19 +60,17 @@ for (const folder of commandFolders) {
         if ('data' in command && 'execute' in command) {
             client.commands.set(command.data.name, command);
         } else {
-            logger.info(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+            console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
         }
     }
 }
 
 process.on('uncaughtException', (err) => {
-    logger.error('Uncaught Exception:', err);
+    console.error('Uncaught Exception:', err);
 });
 
-const { updateStatusMessage } = require('./handlers/statusHandler');
-
 client.once('ready', async () => {
-    logger.info(`${client.user.tag} is Online`);
+    console.log(`${client.user.tag} is Online`);
     
     // Set up the function to update the status message
     const updateStatus = async () => {
@@ -139,7 +115,7 @@ client.once('ready', async () => {
             const guild = client.guilds.cache.get(guildId);
             
             if (guild) {
-                logger.info(`Connected to server: ${guild.name}`);
+                console.log(`Connected to server: ${guild.name}`);
 
                 const guildSettings = await Guild.findOne({ key: guild.id });
 
@@ -147,11 +123,11 @@ client.once('ready', async () => {
                     
                 }
             } else {
-                logger.info(`Unable to find server with ID: ${guildId}`);
+                console.log(`Unable to find server with ID: ${guildId}`);
             }
         }
     } catch (error) {
-        logger.error('Error during bot initialization:', error);
+        console.error('Error during bot initialization:', error);
     }
 });
 
@@ -161,14 +137,14 @@ client.on(Events.InteractionCreate, async interaction => {
     const command = interaction.client.commands.get(interaction.commandName);
 
     if (!command) {
-        logger.error(`No command matching ${interaction.commandName} was found.`);
+        console.error(`No command matching ${interaction.commandName} was found.`);
         return;
     }
 
     try {
         await command.execute(interaction);
     } catch (error) {
-        logger.error(error);
+        console.error(error);
         if (interaction.replied || interaction.deferred) {
             await interaction.followUp({
                 content: 'There was an error while executing this command!',
@@ -186,10 +162,10 @@ client.on(Events.InteractionCreate, async interaction => {
 process.on('SIGINT', async() => {
     try {
         await mongoose.connection.close();
-        logger.info('Closed MongoDB connection');
+        console.log('Closed MongoDB connection');
         process.exit(0);
     } catch (error) {
-        logger.error('Error closing MongoDB connection:', error);
+        console.error('Error closing MongoDB connection:', error);
         process.exit(1);
     }
 });
